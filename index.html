@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>找歌小工具</title>
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2rem; }
+
+      :root {
+        --bg: #faf7f2;
+        --surface: #ffffff;
+        --surface-2: #f3eee6;
+        --ink: #1d1a16;
+        --ink-2: #5c554b;
+        --ink-3: #8a8175;
+        --line: #e3dbcd;
+        --red: #d92323;
+        --red-dark: #b91c1c;
+        --red-soft: #fdecec;
+        --focus: #2563eb;
+        --shadow: 0 10px 30px rgba(60, 40, 10, 0.08);
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #171412;
+          --surface: #221f1c;
+          --surface-2: #2b2723;
+          --ink: #f2ede6;
+          --ink-2: #c9c0b2;
+          --ink-3: #9a9081;
+          --line: #3a352f;
+          --red: #f04444;
+          --red-dark: #d92323;
+          --red-soft: #3a1d1d;
+          --focus: #7aa7ff;
+          --shadow: 0 10px 30px rgba(0,0,0,0.35);
+          color-scheme: dark;
+        }
+      }
+
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 28px 20px 56px;
+      }
+
+      h1 {
+        font-size: 34px;
+        line-height: 1.25;
+        margin: 8px 0 8px;
+      }
+      .lede {
+        font-size: 19px;
+        color: var(--ink-2);
+        margin: 0 0 26px;
+      }
+      .lede strong { color: var(--ink); }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 26px 20px 22px;
+      }
+
+      .form-hint {
+        display: none;
+        font-size: 17px;
+        color: var(--red);
+        margin-top: 12px;
+      }
+      .form-hint.show { display: block; }
+
+      /* ---------- Typing entry ---------- */
+      label.field-label {
+        display: block;
+        font-size: 19px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+      .hint { font-size: 16px; color: var(--ink-3); font-weight: 400; }
+
+      #songInput {
+        width: 100%;
+        font-size: 22px;
+        font-family: inherit;
+        color: var(--ink);
+        background: var(--surface);
+        border: 2px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+        min-height: 64px;
+        outline: none;
+      }
+      #songInput:focus {
+        border-color: var(--focus);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 25%, transparent);
+      }
+      #songInput::placeholder { color: var(--ink-3); font-size: 20px; }
+
+      /* ---------- YouTube button ---------- */
+      #searchBtn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        min-height: 68px;
+        margin-top: 16px;
+        border: none;
+        border-radius: 14px;
+        background: var(--red);
+        color: #fff;
+        font-size: 24px;
+        font-weight: 800;
+        font-family: inherit;
+        cursor: pointer;
+        padding: 14px 20px;
+      }
+      #searchBtn:hover { background: var(--red-dark); }
+      #searchBtn:active { transform: scale(0.99); }
+      #searchBtn svg { width: 30px; height: 30px; flex: 0 0 auto; }
+
+      .preview {
+        margin-top: 16px;
+        font-size: 17px;
+        color: var(--ink-2);
+        background: var(--surface-2);
+        border-radius: 10px;
+        padding: 12px 14px;
+        display: none;
+        word-break: break-all;
+      }
+      .preview.show { display: block; }
+      .preview b { color: var(--ink); }
+
+      .alt-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+        align-items: center;
+      }
+      .alt-row .alt-label { font-size: 16px; color: var(--ink-3); width: 100%; }
+      .alt-btn {
+        display: inline-flex;
+        align-items: center;
+        min-height: 48px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1.5px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 17px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .alt-btn:hover { border-color: var(--ink-3); }
+
+      #clearBtn {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: var(--ink-3);
+        font-size: 16px;
+        font-family: inherit;
+        cursor: pointer;
+        padding: 10px 6px;
+        min-height: 48px;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .recent { margin-top: 30px; display: none; }
+      .recent.show { display: block; }
+      .recent h2, .howto h2, .try h2 { font-size: 20px; margin: 0 0 12px; }
+      .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+      .chip {
+        min-height: 48px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1.5px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 17px;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .chip:hover { border-color: var(--red); color: var(--red); }
+
+      .howto { margin-top: 36px; }
+      .howto ol { margin: 0; padding-left: 26px; font-size: 18px; color: var(--ink-2); }
+      .howto li { margin-bottom: 8px; }
+      .howto li b { color: var(--ink); }
+
+      .try { margin-top: 30px; }
+      .try p { font-size: 16px; color: var(--ink-3); margin: 0 0 12px; }
+      .try .group-label { font-size: 17px; font-weight: 700; color: var(--ink); margin: 18px 0 10px; }
+
+      .note {
+        margin-top: 36px;
+        font-size: 16px;
+        color: var(--ink-2);
+        background: var(--red-soft);
+        border-radius: 12px;
+        padding: 14px 16px;
+      }
+      .note b { color: var(--ink); }
+
+      @media (max-width: 480px) {
+        .wrap { padding: 20px 14px 48px; }
+        h1 { font-size: 30px; }
+        .lede { font-size: 18px; }
+        #songInput { font-size: 20px; }
+        #searchBtn { font-size: 22px; }
+        .card { padding: 22px 16px 18px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>想听哪首歌？</h1>
+      <p class="lede">YouTube 上歌最全、还免费，就是找起来麻烦，不会用就抓瞎。这个页面就是给你搭的桥：<strong>在下面框里填上歌名和歌手</strong>，点一下红色大按钮，就直接跳到 YouTube 的那首歌。<strong>不用学 YouTube。</strong>不想打字，下面有现成的歌和歌手，点一下就听。</p>
+
+      <section class="card" aria-label="找歌">
+        <label class="field-label" for="songInput">歌名 + 歌手 <span class="hint">— 歌手不知道也没关系，只填歌名就行</span></label>
+        <input id="songInput" type="text" autocomplete="off" enterkeyhint="search"
+               placeholder="比如：月亮代表我的心 邓丽君" />
+
+        <button id="searchBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M21.6 7.2a2.8 2.8 0 0 0-2-2C17.9 4.8 12 4.8 12 4.8s-5.9 0-7.6.4a2.8 2.8 0 0 0-2 2A29 29 0 0 0 2 12a29 29 0 0 0 .4 4.8 2.8 2.8 0 0 0 2 2c1.7.4 7.6.4 7.6.4s5.9 0 7.6-.4a2.8 2.8 0 0 0 2-2A29 29 0 0 0 22 12a29 29 0 0 0-.4-4.8zM10 15.2V8.8L15.5 12z"/>
+          </svg>
+          去 YouTube 听这首歌
+        </button>
+
+        <div class="form-hint" id="formHint" role="status">先在上面框里填上歌名，再点红色大按钮。</div>
+        <div class="preview" id="preview"></div>
+
+        <div class="alt-row">
+          <span class="alt-label">YouTube 上没找到？再试试这两个地方：</span>
+          <button class="alt-btn" id="spotifyBtn" type="button">Spotify 找找</button>
+          <button class="alt-btn" id="biliBtn" type="button">Bilibili 找找</button>
+          <button id="clearBtn" type="button">清空重来</button>
+        </div>
+      </section>
+
+      <section class="recent" id="recentBox" aria-label="刚才找过的歌">
+        <h2>刚才找过的</h2>
+        <div class="chips" id="recentChips"></div>
+      </section>
+
+      <section class="try" aria-label="点一下就听">
+        <h2>点一下就听</h2>
+        <p>下面这些点一下就直接去 YouTube，不用打字。到了那边，点最上面那个大图就开始放。</p>
+        <div class="group-label">先试一首</div>
+        <div class="chips">
+          <button class="chip" type="button" data-q="月亮代表我的心 邓丽君">月亮代表我的心 · 邓丽君</button>
+          <button class="chip" type="button" data-q="青花瓷 周杰伦">青花瓷 · 周杰伦</button>
+          <button class="chip" type="button" data-q="海阔天空 Beyond">海阔天空 · Beyond</button>
+          <button class="chip" type="button" data-q="光辉岁月 Beyond">光辉岁月 · Beyond</button>
+        </div>
+        <div class="group-label">听一位歌手的歌</div>
+        <div class="chips">
+          <button class="chip" type="button" data-q="邓丽君 歌曲">邓丽君的歌</button>
+          <button class="chip" type="button" data-q="刘德华 歌曲">刘德华的歌</button>
+          <button class="chip" type="button" data-q="张学友 歌曲">张学友的歌</button>
+          <button class="chip" type="button" data-q="蔡琴 歌曲">蔡琴的歌</button>
+          <button class="chip" type="button" data-q="凤凰传奇 歌曲">凤凰传奇的歌</button>
+          <button class="chip" type="button" data-q="粤语老歌 经典歌曲">粤语老歌</button>
+        </div>
+      </section>
+
+      <section class="howto" aria-label="怎么用">
+        <h2>怎么用，就三步</h2>
+        <ol>
+          <li><b>填歌名：</b>在上面框里填上歌名和歌手，比如「晴天 周杰伦」。不知道歌手也没关系，只填歌名就行。或者直接点下面现成的歌和歌手名字。</li>
+          <li><b>点「去 YouTube 听这首歌」：</b>页面会自己跳到 YouTube，歌已经帮你搜好了，你什么都不用再找、再点别的。</li>
+          <li><b>到了 YouTube，只做一件事：</b>点最上面那个<b>大图</b>（视频画面），歌马上就开始放。开头有广告的话，等几秒，看到「跳过广告」点一下就过去了。一首放完会自动接着放下一首，不用管它；想换歌，回到这个页面再填一首就行。YouTube <b>不用注册、不用付钱</b>，放心点。</li>
+        </ol>
+      </section>
+
+      <p class="note"><b>小提醒：</b>如果 YouTube 第一个结果不是你要的，往下滑一滑，或者把歌手名字加上再搜一次，马上就准了。</p>
+    </main>
+
+    <script>
+      (function () {
+        var input = document.getElementById('songInput');
+        var searchBtn = document.getElementById('searchBtn');
+        var spotifyBtn = document.getElementById('spotifyBtn');
+        var biliBtn = document.getElementById('biliBtn');
+        var clearBtn = document.getElementById('clearBtn');
+        var preview = document.getElementById('preview');
+        var formHint = document.getElementById('formHint');
+        var recentBox = document.getElementById('recentBox');
+        var recentChips = document.getElementById('recentChips');
+
+        var recent = [];
+
+        function query() {
+          return input.value.trim().replace(/\s+/g, ' ');
+        }
+
+        function updatePreview() {
+          var q = query();
+          if (q) {
+            formHint.classList.remove('show');
+            preview.innerHTML = '将在 YouTube 搜：<b></b>';
+            preview.querySelector('b').textContent = q;
+            preview.classList.add('show');
+          } else {
+            preview.classList.remove('show');
+            preview.innerHTML = '';
+          }
+        }
+
+        function openSearch(base, q) {
+          window.open(base + encodeURIComponent(q), '_blank', 'noopener');
+        }
+
+        function addRecent(q) {
+          var i = recent.indexOf(q);
+          if (i !== -1) recent.splice(i, 1);
+          recent.unshift(q);
+          if (recent.length > 6) recent.length = 6;
+          renderRecent();
+        }
+
+        function renderRecent() {
+          recentChips.innerHTML = '';
+          recent.forEach(function (q) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'chip';
+            b.textContent = q;
+            b.addEventListener('click', function () {
+              input.value = q;
+              updatePreview();
+              doYouTube();
+            });
+            recentChips.appendChild(b);
+          });
+          recentBox.classList.toggle('show', recent.length > 0);
+        }
+
+        function needQuery() {
+          var q = query();
+          if (!q) {
+            formHint.classList.add('show');
+            input.focus();
+            return null;
+          }
+          formHint.classList.remove('show');
+          return q;
+        }
+
+        function doYouTube() {
+          var q = needQuery();
+          if (!q) return;
+          addRecent(q);
+          openSearch('https://www.youtube.com/results?search_query=', q);
+        }
+
+        searchBtn.addEventListener('click', doYouTube);
+
+        spotifyBtn.addEventListener('click', function () {
+          var q = needQuery();
+          if (!q) return;
+          addRecent(q);
+          openSearch('https://open.spotify.com/search/', q);
+        });
+
+        biliBtn.addEventListener('click', function () {
+          var q = needQuery();
+          if (!q) return;
+          addRecent(q);
+          openSearch('https://search.bilibili.com/all?keyword=', q);
+        });
+
+        clearBtn.addEventListener('click', function () {
+          input.value = '';
+          formHint.classList.remove('show');
+          updatePreview();
+          input.focus();
+        });
+
+        input.addEventListener('input', updatePreview);
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            doYouTube();
+          }
+        });
+
+        document.querySelectorAll('.chip[data-q]').forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            input.value = chip.getAttribute('data-q');
+            updatePreview();
+            doYouTube();
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
